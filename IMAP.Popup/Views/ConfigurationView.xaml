@@ -1,0 +1,30 @@
+<Window x:Class="IMAP.Popup.Views.ConfigurationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cal="clr-namespace:Caliburn.Micro;assembly=Caliburn.Micro"
+        xmlns:ext="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" 
+        Height="500" Width="700"
+        Title="Configuration" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+        <ext:PropertyGrid Grid.Row="0" Margin="5" x:Name="ConfigurationGrid" 
+                          SelectedObject="{Binding ConfigurationData,Mode=TwoWay}"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1">
+            <Button Margin="10" Width="70" Content="Save" >
+                <i:Interaction.Triggers>                                       
+                    <i:EventTrigger EventName="Click">
+                        <cal:ActionMessage MethodName="SaveConfiguration">
+                            <cal:Parameter Value="{Binding ElementName=ConfigurationGrid, Path=SelectedObject}" />
+                        </cal:ActionMessage>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            <Button Margin="10" Width="70" Content="Close" x:Name="TryClose"/>
+        </StackPanel>
+    </Grid>
+</Window>
