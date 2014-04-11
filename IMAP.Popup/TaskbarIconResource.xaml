@@ -26,30 +26,31 @@
 
     <tb:TaskbarIcon x:Key="TaskbarIcon"
                     cal:Bind.Model="IMAP.Popup.ViewModels.PopupIconViewModel"
-                    IconSource="/Images/appicon.ico"                                  
+                    IconSource="/Images/appicon.ico"     
+                    MenuActivation="LeftOrRightClick"                
                     ContextMenu="{StaticResource SysTrayMenu}">
-        <tb:TaskbarIcon.ToolTip>
+        <tb:TaskbarIcon.TrayToolTip>
             <Border HorizontalAlignment="Stretch"
                 Background="{DynamicResource MenuBackground}"
                 Margin="5,5,5,5"
                 BorderThickness="1,1,1,1"
-                BorderBrush="#FF997137">
+                BorderBrush="#FF997137"
+                Padding="5">                
                 <Border.Effect>
                     <DropShadowEffect Color="#FF747474" />
                 </Border.Effect>
                
-            <StackPanel Orientation="Vertical">
-                    <Image Source="/Images/mail_icon.png" Margin="15" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Mail Checker" HorizontalAlignment="Center" />      
+            <StackPanel Orientation="Horizontal">
+                    <Image Source="/Images/mail_icon.png" Margin="15" Width="80" Height="80" />
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Foreground="#FFECAD25" Margin="10" FontWeight="Bold" Text="Mail Checker" FontSize="18" HorizontalAlignment="Left" />
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Unread Mail Count " />
-                            <TextBlock cal:Bind.Model="IMAP.Popup.ViewModels.PopupIconViewModel"
-                                       Text="{Binding UnreadMailCount}" />
+                            <TextBlock FontSize="15" Foreground="#FFECAD25" Text="Unread Mails : "/>
+                            <TextBlock FontSize="15" Foreground="#FFECAD25" Text="{Binding UnreadMailCount}" cal:Bind.Model="IMAP.Popup.ViewModels.PopupIconViewModel"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>
-        </tb:TaskbarIcon.ToolTip>
+        </tb:TaskbarIcon.TrayToolTip>
     </tb:TaskbarIcon>
 </ResourceDictionary>

@@ -71,8 +71,9 @@ namespace IMAP.Popup.Models
 
         protected void OnMailServerPolled()
         {
-            if (MailServerPolled != null)
-                Task.Run(() => MailServerPolled());
+            var mailServerPolled = MailServerPolled;
+            if (mailServerPolled != null)
+                Task.Run(() => mailServerPolled());
         }
 
         protected void DoMailPolling(object threadState)
@@ -83,7 +84,7 @@ namespace IMAP.Popup.Models
                 {
                     var fetchedMails = FetchNewMails().ToList();
                     var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-                    var relevantFetchedMails = fetchedMails.Where(x => x.Date.UtcDateTime > lastFetchDate)
+                    var relevantFetchedMails = fetchedMails.Where(x => x.Item2.Date.UtcDateTime > lastFetchDate)
                                                            .ToList();
                     if (relevantFetchedMails.Any())
                     {
@@ -99,30 +100,25 @@ namespace IMAP.Popup.Models
             }
         }
 
-        private void OnMailReceive(IReadOnlyList<MimeMessage> fetchedMails)
+        private void OnMailReceive(IReadOnlyList<Tuple<UniqueId,MimeMessage>> fetchedMailsWithUids)
         {
             var mailReceivedEvent = MailReceived;
             if (mailReceivedEvent != null)
             {
-                var eventThread = new Thread(() =>
-                {
-                    foreach (var mail in fetchedMails)
-                        mailReceivedEvent(new Email
-                        {
-                            From = mail.From.First().ToString(),
-                            To = mail.To.Select(x => x.ToString()).ToArray(),
-                            Cc = mail.Cc.Select(x => x.ToString()).ToArray(),
-                            Subject = mail.Subject,
-                            WhenSent = mail.Date.UtcDateTime                            
-                        });
-                });
-
-                eventThread.SetApartmentState(ApartmentState.STA);
-                eventThread.Start();
+                foreach (var mailWithUid in fetchedMailsWithUids)
+                    mailReceivedEvent(new Email
+                    {
+                        From = mailWithUid.Item2.From.First().ToString(),
+                        To = mailWithUid.Item2.To.Select(x => x.ToString()).ToArray(),
+                        Cc = mailWithUid.Item2.Cc.Select(x => x.ToString()).ToArray(),
+                        Subject = mailWithUid.Item2.Subject,
+                        WhenSent = mailWithUid.Item2.Date.UtcDateTime,
+                        MessageUid = mailWithUid.Item1.Id
+                    });
             }
         }
 
-        protected IEnumerable<MimeMessage> FetchNewMails()
+        protected IEnumerable<Tuple<UniqueId,MimeMessage>> FetchNewMails()
         {
             var configuration = GetConfiguration();
             var credentials = new NetworkCredential(configuration.Username, configuration.Password);
@@ -148,6 +144,7 @@ namespace IMAP.Popup.Models
                                                 .And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
 
                         UnreadMailCount = inbox.Search(SearchQuery.NotSeen,cancel.Token).Length;
+                        OnMailServerPolled();
                     }
                     catch (Exception e)
                     {
@@ -158,7 +155,7 @@ namespace IMAP.Popup.Models
                         yield break;
 
                     foreach (var uid in recentMailUids)
-                        yield return inbox.GetMessage(uid, cancel.Token);
+                        yield return Tuple.Create(uid,inbox.GetMessage(uid, cancel.Token));
                 }
             }
         }

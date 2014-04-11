@@ -1,4 +1,6 @@
-﻿<UserControl x:Class="IMAP.Popup.Views.NewMailBaloon"
+﻿<!-- Parts of what is here adapted from FancyBalloon.xaml from samples (structure of xaml and animations) -->
+<!-- the samples are from Wpf NotifyIcon, awesome project by Philipp Sumi (http://www.hardcodet.net) -->
+    <UserControl x:Class="IMAP.Popup.Views.NewMailBaloon"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:tb="http://www.hardcodet.net/taskbar"
@@ -113,7 +115,7 @@
         </Border>
         <Rectangle x:Name="HighlightRectangle" Width="150" Height="10" Margin="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" Fill="{Binding HighlightBrush}" />            
         <Image HorizontalAlignment="Left"
-               Margin="15,20,0,10"
+               Margin="18,26,0,0"
                Width="72"
                Source="/Images/incoming_mail_icon.png"
                Stretch="Fill"

@@ -1,15 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Caliburn.Micro;
-using IMAP.Popup.ViewModels;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Hardcodet.Wpf.TaskbarNotification;
 using IMAP.Popup.Models;
+using IMAP.Popup.ViewModels;
 using Raven.Client;
 using Raven.Client.Embedded;
-using Raven.Database.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace IMAP.Popup.Bootstrap

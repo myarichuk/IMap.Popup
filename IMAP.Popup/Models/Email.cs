@@ -16,6 +16,6 @@ namespace IMAP.Popup.Models
 
         public DateTime WhenSent { get; set; }
 
-        public long MessageUid { get; set; }
+        public uint MessageUid { get; set; }
     }
 }

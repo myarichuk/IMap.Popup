@@ -5,12 +5,9 @@ using IMAP.Popup.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace IMAP.Popup.ViewModels
 {
@@ -34,6 +31,12 @@ namespace IMAP.Popup.ViewModels
             _taskbarIcon = taskbarIcon;
         }
 
+        protected override void OnViewLoaded(object view)
+        {
+            base.OnViewLoaded(view);
+            NotifyOfPropertyChange(() => UnreadMailCount);
+        }
+        
         public void ShowConfiguration()
         {
             _windowManager.ShowDialog(_configurationViewModel);
