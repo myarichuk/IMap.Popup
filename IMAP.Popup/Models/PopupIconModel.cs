@@ -163,7 +163,8 @@ namespace IMAP.Popup.Models
         public void Dispose()
         {
             _isPolling = false;
-            Thread.Sleep(_persistanceModel.LoadConfiguration().PollingInterval + 10);
+            var pollingInterval = _persistanceModel.LoadConfiguration().PollingInterval ;
+            _pollingThread.Join(pollingInterval + 10);
             if(_pollingThread.IsAlive)
                 try
                 {

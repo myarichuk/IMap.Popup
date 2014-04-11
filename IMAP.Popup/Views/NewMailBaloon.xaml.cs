@@ -14,6 +14,8 @@ namespace IMAP.Popup.Views
     {
         private bool _isClosing;
 
+        public event Action BaloonClosing;
+
         public static readonly DependencyProperty SubjectTextProperty =
         DependencyProperty.Register("SubjectText",
             typeof(string),
@@ -62,6 +64,8 @@ namespace IMAP.Popup.Views
         {
             e.Handled = true; //suppresses the popup from being closed immediately
             _isClosing = true;
+            if (BaloonClosing != null)
+                BaloonClosing();
         }
 
 
