@@ -65,7 +65,7 @@ namespace IMAP.Popup.Models
         public Configuration LoadConfiguration()
         {
             using (var session = _documentStore.OpenSession())
-                return session.Load<Configuration>(ConfigurationDocumentId);
+                return session.Load<Configuration>(ConfigurationDocumentId) ?? new Configuration();
         }
 
         public void SaveConfiguration(Configuration configuration)

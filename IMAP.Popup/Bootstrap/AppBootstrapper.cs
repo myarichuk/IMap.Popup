@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Raven.Database.Tasks;
 
 namespace IMAP.Popup.Bootstrap
 {
@@ -17,7 +18,7 @@ namespace IMAP.Popup.Bootstrap
 	{
 		private WindsorContainer _container;
         private TaskbarIcon _taskbarIcon;
-        private ManualResetEventSlim _taskbarIconInitializedEvent = new ManualResetEventSlim();
+        private readonly ManualResetEventSlim _taskbarIconInitializedEvent = new ManualResetEventSlim();
 
 		protected override void Configure()
 		{
@@ -52,13 +53,12 @@ namespace IMAP.Popup.Bootstrap
                        .LifestyleSingleton());
 
             //pre-initialize some of models
-            System.Threading.Tasks.Task.Run(() =>
-            {
-                _container.Resolve<IDocumentStore>();
-                _container.Resolve<PopupIconModel>();
-                _container.Resolve<PopupIconViewModel>();
-            });                                        
-            
+			System.Threading.Tasks.Task.Run(() =>
+			{
+				_container.Resolve<IDocumentStore>();
+				_container.Resolve<PopupIconModel>();
+				_container.Resolve<PopupIconViewModel>();
+			});
 		}
 
         protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
