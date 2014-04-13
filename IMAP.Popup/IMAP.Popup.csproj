@@ -71,6 +71,9 @@
     <Reference Include="Mono.Data.Sqlite">
       <HintPath>..\packages\MimeKit.0.30.0.0\lib\net40\Mono.Data.Sqlite.dll</HintPath>
     </Reference>
+    <Reference Include="NetSparkle.Net40">
+      <HintPath>..\packages\NetSparkle.1.1.0\lib\net40-full\NetSparkle.Net40.dll</HintPath>
+    </Reference>
     <Reference Include="Raven.Abstractions">
       <HintPath>..\packages\RavenDB.Client.2.5.2851\lib\net45\Raven.Abstractions.dll</HintPath>
     </Reference>
