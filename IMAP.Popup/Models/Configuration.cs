@@ -49,13 +49,9 @@ namespace IMAP.Popup
             set
             {
                 if (ImapPort == 0)
-                {
-                    if (value == ImapAuthentication.SSL)
-                        ImapPort = 993;
-                    else
-                        ImapPort = 143;
-                } 
-                _authentication = value;
+                    ImapPort = (uint) (value == ImapAuthentication.SSL ? 993 : 143);
+                
+				_authentication = value;
             }
         }
 
@@ -70,6 +66,7 @@ namespace IMAP.Popup
 
         public Configuration()
         {
+	        ImapServer = String.Empty;
             ImapPort = 143;
             PopupDelay = 4000; //default delay
             PollingInterval = 1000; //default polling latency

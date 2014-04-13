@@ -40,7 +40,7 @@ namespace IMAP.Popup.ViewModels
             _incomingMailPopupClosedEvent = new ManualResetEventSlim();
             _incomingMail = new BlockingCollection<Email>();
             
-            _incomingMailPopupHandler = new Thread(() => HandleDisplayingOfIncomingMail())
+            _incomingMailPopupHandler = new Thread(HandleDisplayingOfIncomingMail)
             {
                 Name = "IncomingMailPopupHandler",
                 IsBackground = true
@@ -101,10 +101,10 @@ namespace IMAP.Popup.ViewModels
 
         private void HandleDisplayingOfIncomingMail()
         {
-            Email incomingMail;
-            while(_isApplicationActive)
+	        while(_isApplicationActive)
             {
-                while (_incomingMail.TryTake(out incomingMail))
+	            Email incomingMail;
+	            while (_incomingMail.TryTake(out incomingMail))
                 {
                     _incomingMailPopupClosedEvent.Reset();
                     DisplayIncomingEmail(incomingMail);
@@ -120,17 +120,17 @@ namespace IMAP.Popup.ViewModels
             
             NewMailBaloon newMailBaloon = null;
                         
-            _taskbarIcon.Dispatcher.Invoke(new System.Action(() =>
+            _taskbarIcon.Dispatcher.Invoke(() =>
             {
-                newMailBaloon = new NewMailBaloon();
-                newMailBaloon.BaloonClosing += () => IncomingEmail_Popup_Closed();
-                newMailBaloon.Dispatcher.Invoke(new System.Action(() =>
-                {
-                    newMailBaloon.FromText = email.From;
-                    newMailBaloon.SubjectText = email.Subject;
-                    newMailBaloon.HighlightBrush = GetHighlightBrushFromRules(email, configuration.HighlightRules);                     
-                }));
-            }));
+	            newMailBaloon = new NewMailBaloon();
+	            newMailBaloon.BaloonClosing += IncomingEmail_Popup_Closed;
+	            newMailBaloon.Dispatcher.Invoke(() =>
+	            {
+		            newMailBaloon.FromText = email.From;
+		            newMailBaloon.SubjectText = email.Subject;
+		            newMailBaloon.HighlightBrush = GetHighlightBrushFromRules(email, configuration.HighlightRules);                     
+	            });
+            });
 
             _taskbarIcon.ShowCustomBalloon(newMailBaloon, PopupAnimation.Slide, configuration.PopupDelay);
         }
@@ -144,13 +144,14 @@ namespace IMAP.Popup.ViewModels
             });
         }
 
-        private SolidColorBrush GetHighlightBrushFromRules(Email mail, IEnumerable<MailHighlightRule> mailHighlightRules)
+        private static SolidColorBrush GetHighlightBrushFromRules(Email mail, IEnumerable<MailHighlightRule> mailHighlightRules)
         {
             var defaultBrush = new SolidColorBrush(Colors.Transparent);
-            if(mailHighlightRules == null || mailHighlightRules.Any() == false)
+	        var highlightRules = mailHighlightRules.ToList();
+	        if(mailHighlightRules == null || highlightRules.Any() == false)
                 return defaultBrush;
 
-            foreach(var rule in mailHighlightRules)
+            foreach(var rule in highlightRules)
             {
                 if ((!String.IsNullOrWhiteSpace(rule.FromRegex) && mail.From.RegexContains(rule.FromRegex)) ||
                    (!String.IsNullOrWhiteSpace(rule.SubjectRegex) && mail.Subject.RegexContains(rule.SubjectRegex)))

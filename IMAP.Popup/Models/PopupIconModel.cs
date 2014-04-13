@@ -36,7 +36,7 @@ namespace IMAP.Popup.Models
             }
             set
             {
-                _persistanceModel.Set<bool>(IsPollingActivatedKey, value);
+                _persistanceModel.Set(IsPollingActivatedKey, value);
             }
         }
 
@@ -56,7 +56,7 @@ namespace IMAP.Popup.Models
         {
             _isPolling = true;
             _persistanceModel = persistanceModel;
-            GetConfiguration = () => persistanceModel.LoadConfiguration();
+            GetConfiguration = persistanceModel.LoadConfiguration;
             _pollingThread = new Thread(DoMailPolling) { Name = "Mail Polling Thread", IsBackground = true };
             _pollingThread.Start();
 
@@ -72,8 +72,8 @@ namespace IMAP.Popup.Models
         protected void OnMailServerPolled()
         {
             var mailServerPolled = MailServerPolled;
-            if (mailServerPolled != null)
-                Task.Run(() => mailServerPolled());
+	        if (mailServerPolled != null)
+		        mailServerPolled();
         }
 
         protected void DoMailPolling(object threadState)
@@ -100,7 +100,7 @@ namespace IMAP.Popup.Models
             }
         }
 
-        private void OnMailReceive(IReadOnlyList<Tuple<UniqueId,MimeMessage>> fetchedMailsWithUids)
+        private void OnMailReceive(IEnumerable<Tuple<UniqueId, MimeMessage>> fetchedMailsWithUids)
         {
             var mailReceivedEvent = MailReceived;
             if (mailReceivedEvent != null)
@@ -122,42 +122,43 @@ namespace IMAP.Popup.Models
         {
             var configuration = GetConfiguration();
             var credentials = new NetworkCredential(configuration.Username, configuration.Password);
+			var results = new List<Tuple<UniqueId, MimeMessage>>();
+	        try
+	        {
+		        var uri = new Uri("imaps://" + configuration.ImapServer + ":" + configuration.ImapPort);
+		        using (var cancel = new CancellationTokenSource())
+		        {
+			        using (var mailClient = new ImapClient())
+			        {
+				        mailClient.Connect(uri, cancel.Token);
+				        mailClient.AuthenticationMechanisms.Remove("XOAUTH");
 
-            var uri = new Uri("imaps://" + configuration.ImapServer + ":" + configuration.ImapPort);
-            using (var cancel = new CancellationTokenSource())
-            {
-                using (var mailClient = new ImapClient())
-                {
-                    mailClient.Connect(uri, cancel.Token);
-                    mailClient.AuthenticationMechanisms.Remove("XOAUTH");
+				        mailClient.Authenticate(credentials, cancel.Token);
 
-                    mailClient.Authenticate(credentials, cancel.Token);
+				        var inbox = mailClient.Inbox;
+				        inbox.Open(FolderAccess.ReadOnly, cancel.Token);
 
-                    var inbox = mailClient.Inbox;
-                    inbox.Open(FolderAccess.ReadOnly, cancel.Token);
+				        UniqueId[] recentMailUids = null;
+				        var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
+				        recentMailUids = inbox.Search(SearchQuery.NotSeen
+					        .And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
 
-                    UniqueId[] recentMailUids = null;
-                    try
-                    {
-                        var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-                        recentMailUids = inbox.Search(SearchQuery.NotSeen
-                                                .And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
+				        UnreadMailCount = inbox.Search(SearchQuery.NotSeen, cancel.Token).Length;
+				        OnMailServerPolled();
 
-                        UnreadMailCount = inbox.Search(SearchQuery.NotSeen,cancel.Token).Length;
-                        OnMailServerPolled();
-                    }
-                    catch (Exception e)
-                    {
-                        //TODO : add logging
-                    }
+				        if (recentMailUids != null)
+					        results.AddRange(recentMailUids.Select(uid =>
+						        Tuple.Create(uid, inbox.GetMessage(uid, cancel.Token))));
+			        }
+		        }
+	        }
+	        catch(Exception e)
+	        {
+		        MessageBox.Show("Mail polling failed. Reason: " + e.Message + ". It will be disabled. Correct the error and re-enable mail polling", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+		        IsPollingActive = false;
+	        }
 
-                    if (recentMailUids == null)
-                        yield break;
-
-                    foreach (var uid in recentMailUids)
-                        yield return Tuple.Create(uid,inbox.GetMessage(uid, cancel.Token));
-                }
-            }
+	        return results;
         }
 
         public void Dispose()

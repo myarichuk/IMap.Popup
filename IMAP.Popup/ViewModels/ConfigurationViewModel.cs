@@ -8,7 +8,7 @@ namespace IMAP.Popup.ViewModels
 
     public class ConfigurationViewModel : Screen
     {
-        private PersistanceModel _model;
+        private readonly PersistanceModel _model;
 
         public ConfigurationViewModel(PersistanceModel model)
         {
