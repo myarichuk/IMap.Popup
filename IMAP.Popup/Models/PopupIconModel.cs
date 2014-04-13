@@ -1,177 +1,166 @@
-﻿using MailKit;
-using MailKit.Net.Imap;
-using MailKit.Search;
-using MimeKit;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
+using MailKit;
+using MailKit.Net.Imap;
+using MailKit.Search;
+using MimeKit;
 
 namespace IMAP.Popup.Models
 {
-    public class PopupIconModel : IDisposable
-    {
-        public event Action<Email> MailReceived;
-        public event Action MailServerPolled;
+	public class PopupIconModel : IDisposable
+	{
+		private const string LastFetchDateKey = "last-fetch-date";
+		private const string UnreadMailCountKey = "unread-mail-count";
+		private const string IsPollingActivatedKey = "is-polling-activated";
 
-        private const string LastFetchDateKey = "last-fetch-date";
-        private const string UnreadMailCountKey = "unread-mail-count";
-        private const string IsPollingActivatedKey = "is-polling-activated";
-        
-        private readonly Func<Configuration> GetConfiguration;
-        private readonly PersistanceModel _persistanceModel;
-        private bool _isPolling;
-        private readonly Thread _pollingThread;
+		private readonly Func<Configuration> GetConfiguration;
+		private readonly PersistanceModel _persistanceModel;
+		private readonly Thread _pollingThread;
+		private bool _isPolling;
+
+		public PopupIconModel(PersistanceModel persistanceModel)
+		{
+			_isPolling = true;
+			_persistanceModel = persistanceModel;
+			GetConfiguration = persistanceModel.LoadConfiguration;
+			_pollingThread = new Thread(DoMailPolling) {Name = "Mail Polling Thread", IsBackground = true};
+			_pollingThread.Start();
+
+			if (!_persistanceModel.Contains(LastFetchDateKey))
+				_persistanceModel.Set(LastFetchDateKey, DateTime.UtcNow);
+		}
 
 
-        public bool IsPollingActive
-        {
-            get
-            {
-                return _persistanceModel.Get<bool>(IsPollingActivatedKey);
-            }
-            set
-            {
-                _persistanceModel.Set(IsPollingActivatedKey, value);
-            }
-        }
+		public bool IsPollingActive
+		{
+			get { return _persistanceModel.Get<bool>(IsPollingActivatedKey); }
+			set { _persistanceModel.Set(IsPollingActivatedKey, value); }
+		}
 
-        public int UnreadMailCount
-        {
-            get
-            {
-                return _persistanceModel.Get<int>(UnreadMailCountKey);
-            }
-            private set
-            {
-                _persistanceModel.Set<int>(UnreadMailCountKey,value);
-            }
-        }
+		public int UnreadMailCount
+		{
+			get { return _persistanceModel.Get<int>(UnreadMailCountKey); }
+			private set { _persistanceModel.Set(UnreadMailCountKey, value); }
+		}
 
-        public PopupIconModel(PersistanceModel persistanceModel)
-        {
-            _isPolling = true;
-            _persistanceModel = persistanceModel;
-            GetConfiguration = persistanceModel.LoadConfiguration;
-            _pollingThread = new Thread(DoMailPolling) { Name = "Mail Polling Thread", IsBackground = true };
-            _pollingThread.Start();
+		public void Dispose()
+		{
+			_isPolling = false;
+			int pollingInterval = _persistanceModel.LoadConfiguration().PollingInterval;
+			_pollingThread.Join(pollingInterval + 10);
+			if (_pollingThread.IsAlive)
+				try
+				{
+					_pollingThread.Abort();
+				}
+				catch
+				{
+				}
+		}
 
-            if (!_persistanceModel.Contains(LastFetchDateKey))
-                _persistanceModel.Set(LastFetchDateKey, DateTime.UtcNow);            
-        }
+		public event Action<Email> MailReceived;
+		public event Action MailServerPolled;
 
-        public void ResetLastFetchDate()
-        {
-            _persistanceModel.Set(LastFetchDateKey, new DateTime(1982,1,1));
-        }
+		public void ResetLastFetchDate()
+		{
+			_persistanceModel.Set(LastFetchDateKey, new DateTime(1982, 1, 1));
+		}
 
-        protected void OnMailServerPolled()
-        {
-            var mailServerPolled = MailServerPolled;
-	        if (mailServerPolled != null)
-		        mailServerPolled();
-        }
+		protected void OnMailServerPolled()
+		{
+			Action mailServerPolled = MailServerPolled;
+			if (mailServerPolled != null)
+				mailServerPolled();
+		}
 
-        protected void DoMailPolling(object threadState)
-        {
-            while(_isPolling)
-            {
-                if (IsPollingActive)
-                {
-                    var fetchedMails = FetchNewMails().ToList();
-                    var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-                    var relevantFetchedMails = fetchedMails.Where(x => x.Item2.Date.UtcDateTime > lastFetchDate)
-                                                           .ToList();
-                    if (relevantFetchedMails.Any())
-                    {
-                        OnMailReceive(relevantFetchedMails);
-                        if (relevantFetchedMails.Any())
-                            _persistanceModel.Set(LastFetchDateKey, DateTime.UtcNow);
+		protected void DoMailPolling(object threadState)
+		{
+			while (_isPolling)
+			{
+				if (IsPollingActive)
+				{
+					List<Tuple<UniqueId, MimeMessage>> fetchedMails = FetchNewMails().ToList();
+					var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
+					List<Tuple<UniqueId, MimeMessage>> relevantFetchedMails =
+						fetchedMails.Where(x => x.Item2.Date.UtcDateTime >= lastFetchDate)
+							.ToList();
+					if (relevantFetchedMails.Any())
+					{
+						OnMailReceive(relevantFetchedMails);
+						_persistanceModel.Set(LastFetchDateKey, DateTime.UtcNow);
+					}
+				}
 
-                    }
-                }
-                
-                var configuration = _persistanceModel.LoadConfiguration();
-                Thread.Sleep(configuration.PollingInterval);
-            }
-        }
+				Configuration configuration = _persistanceModel.LoadConfiguration();
+				Thread.Sleep(configuration.PollingInterval);
+			}
+		}
 
-        private void OnMailReceive(IEnumerable<Tuple<UniqueId, MimeMessage>> fetchedMailsWithUids)
-        {
-            var mailReceivedEvent = MailReceived;
-            if (mailReceivedEvent != null)
-            {
-                foreach (var mailWithUid in fetchedMailsWithUids)
-                    mailReceivedEvent(new Email
-                    {
-                        From = mailWithUid.Item2.From.First().ToString(),
-                        To = mailWithUid.Item2.To.Select(x => x.ToString()).ToArray(),
-                        Cc = mailWithUid.Item2.Cc.Select(x => x.ToString()).ToArray(),
-                        Subject = mailWithUid.Item2.Subject,
-                        WhenSent = mailWithUid.Item2.Date.UtcDateTime,
-                        MessageUid = mailWithUid.Item1.Id
-                    });
-            }
-        }
+		private void OnMailReceive(IEnumerable<Tuple<UniqueId, MimeMessage>> fetchedMailsWithUids)
+		{
+			Action<Email> mailReceivedEvent = MailReceived;
+			if (mailReceivedEvent != null)
+			{
+				foreach (var mailWithUid in fetchedMailsWithUids)
+					mailReceivedEvent(new Email
+					{
+						From = mailWithUid.Item2.From.First().ToString(),
+						To = mailWithUid.Item2.To.Select(x => x.ToString()).ToArray(),
+						Cc = mailWithUid.Item2.Cc.Select(x => x.ToString()).ToArray(),
+						Subject = mailWithUid.Item2.Subject,
+						WhenSent = mailWithUid.Item2.Date.UtcDateTime,
+						MessageUid = mailWithUid.Item1.Id
+					});
+			}
+		}
 
-        protected IEnumerable<Tuple<UniqueId,MimeMessage>> FetchNewMails()
-        {
-            var configuration = GetConfiguration();
-            var credentials = new NetworkCredential(configuration.Username, configuration.Password);
+		protected IEnumerable<Tuple<UniqueId, MimeMessage>> FetchNewMails()
+		{
+			Configuration configuration = GetConfiguration();
+			var credentials = new NetworkCredential(configuration.Username, configuration.Password);
 			var results = new List<Tuple<UniqueId, MimeMessage>>();
-	        try
-	        {
-		        var uri = new Uri("imaps://" + configuration.ImapServer + ":" + configuration.ImapPort);
-		        using (var cancel = new CancellationTokenSource())
-		        {
-			        using (var mailClient = new ImapClient())
-			        {
-				        mailClient.Connect(uri, cancel.Token);
-				        mailClient.AuthenticationMechanisms.Remove("XOAUTH");
+			try
+			{
+				var uri = new Uri("imaps://" + configuration.ImapServer + ":" + configuration.ImapPort);
+				using (var cancel = new CancellationTokenSource())
+				{
+					using (var mailClient = new ImapClient())
+					{
+						mailClient.Connect(uri, cancel.Token);
+						mailClient.AuthenticationMechanisms.Remove("XOAUTH");
 
-				        mailClient.Authenticate(credentials, cancel.Token);
+						mailClient.Authenticate(credentials, cancel.Token);
 
-				        var inbox = mailClient.Inbox;
-				        inbox.Open(FolderAccess.ReadOnly, cancel.Token);
+						IFolder inbox = mailClient.Inbox;
+						inbox.Open(FolderAccess.ReadOnly, cancel.Token);
 
-				        UniqueId[] recentMailUids = null;
-				        var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-				        recentMailUids = inbox.Search(SearchQuery.NotSeen
-					        .And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
+						UniqueId[] recentMailUids = null;
+						var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
+						recentMailUids = inbox.Search(SearchQuery.NotSeen
+							.And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
 
-				        UnreadMailCount = inbox.Search(SearchQuery.NotSeen, cancel.Token).Length;
-				        OnMailServerPolled();
+						UnreadMailCount = inbox.Search(SearchQuery.NotSeen, cancel.Token).Length;
+						OnMailServerPolled();
 
-				        if (recentMailUids != null)
-					        results.AddRange(recentMailUids.Select(uid =>
-						        Tuple.Create(uid, inbox.GetMessage(uid, cancel.Token))));
-			        }
-		        }
-	        }
-	        catch(Exception e)
-	        {
-		        MessageBox.Show("Mail polling failed. Reason: " + e.Message + ". It will be disabled. Correct the error and re-enable mail polling", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-		        IsPollingActive = false;
-	        }
+						if (recentMailUids != null)
+							results.AddRange(recentMailUids.Select(uid =>
+								Tuple.Create(uid, inbox.GetMessage(uid, cancel.Token))));
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(
+					"Mail polling failed. Reason: " + e.Message + ". It will be disabled. Correct the error and re-enable mail polling",
+					"Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+				IsPollingActive = false;
+			}
 
-	        return results;
-        }
-
-        public void Dispose()
-        {
-            _isPolling = false;
-            var pollingInterval = _persistanceModel.LoadConfiguration().PollingInterval ;
-            _pollingThread.Join(pollingInterval + 10);
-            if(_pollingThread.IsAlive)
-                try
-                {
-                    _pollingThread.Abort();
-                }
-                catch { }
-        }
-    }
+			return results;
+		}
+	}
 }

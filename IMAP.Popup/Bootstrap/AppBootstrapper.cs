@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Raven.Database.Tasks;
 
 namespace IMAP.Popup.Bootstrap
 {
@@ -52,9 +53,12 @@ namespace IMAP.Popup.Bootstrap
                        .LifestyleSingleton());
 
             //pre-initialize some of models
-			_container.Resolve<IDocumentStore>();
-			_container.Resolve<PopupIconModel>();
-			_container.Resolve<PopupIconViewModel>();
+			System.Threading.Tasks.Task.Run(() =>
+			{
+				_container.Resolve<IDocumentStore>();
+				_container.Resolve<PopupIconModel>();
+				_container.Resolve<PopupIconViewModel>();
+			});
 		}
 
         protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)

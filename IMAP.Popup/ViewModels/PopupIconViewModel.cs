@@ -23,7 +23,7 @@ namespace IMAP.Popup.ViewModels
         private readonly TaskbarIcon _taskbarIcon;
         private readonly BlockingCollection<Email> _incomingMail;
         private bool _isApplicationActive;
-        private readonly Thread _incomingMailPopupHandler;
+        private readonly Thread _incomingMailPopupHandler;					
 
         public PopupIconViewModel(IWindowManager windowManager,                                  
                                   ConfigurationViewModel configurationViewModel,
@@ -104,7 +104,7 @@ namespace IMAP.Popup.ViewModels
 	        while(_isApplicationActive)
             {
 	            Email incomingMail;
-	            while (_incomingMail.TryTake(out incomingMail))
+	            while (_incomingMail.TryTake(out incomingMail) && incomingMail != null)
                 {
                     _incomingMailPopupClosedEvent.Reset();
                     DisplayIncomingEmail(incomingMail);
@@ -128,7 +128,7 @@ namespace IMAP.Popup.ViewModels
 	            {
 		            newMailBaloon.FromText = email.From;
 		            newMailBaloon.SubjectText = email.Subject;
-		            newMailBaloon.HighlightBrush = GetHighlightBrushFromRules(email, configuration.HighlightRules);                     
+		            newMailBaloon.HighlightBrush = GetHighlightBrushFromRules(email, configuration.HighlightRules ?? new List<MailHighlightRule>());
 	            });
             });
 
@@ -137,12 +137,8 @@ namespace IMAP.Popup.ViewModels
 
         private void IncomingEmail_Popup_Closed()
         {
-            Task.Run(() =>
-            {
-                Thread.Sleep(50);
-                _incomingMailPopupClosedEvent.Set();
-            });
-        }
+			_incomingMailPopupClosedEvent.Set();
+		}
 
         private static SolidColorBrush GetHighlightBrushFromRules(Email mail, IEnumerable<MailHighlightRule> mailHighlightRules)
         {

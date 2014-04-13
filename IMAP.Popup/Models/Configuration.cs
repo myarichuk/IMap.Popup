@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Windows.Media;
 
-namespace IMAP.Popup
+namespace IMAP.Popup.Models
 {
     public enum ImapAuthentication
     {
@@ -16,13 +14,13 @@ namespace IMAP.Popup
 
     public class MailHighlightRule
     {
-        [DisplayName("From field Regex")]
+        [DisplayName(@"From field Regex")]
         public string FromRegex { get; set; }
 
-        [DisplayName("Subject field Regex")]
+        [DisplayName(@"Subject field Regex")]
         public string SubjectRegex { get; set; }
 
-        [DisplayName("Highlight Color")]
+        [DisplayName(@"Highlight Color")]
         public Color HighlightColor { get; set; }
     }
 
@@ -32,14 +30,14 @@ namespace IMAP.Popup
 
         public string Password { get; set; }
 
-        [DisplayName("IMAP Server Hostname")]
+        [DisplayName(@"IMAP Server Hostname")]
         public string ImapServer { get; set; }
 
-        [DisplayName("IMAP Port")]
+        [DisplayName(@"IMAP Port")]
         public uint ImapPort { get; set; }
 
         private ImapAuthentication _authentication;
-        [DisplayName("IMAP Authentication")]
+        [DisplayName(@"IMAP Authentication")]
         public ImapAuthentication Authentication 
         {
             get
@@ -55,13 +53,13 @@ namespace IMAP.Popup
             }
         }
 
-        [DisplayName("Highlighting Rules")]
+        [DisplayName(@"Highlighting Rules")]
         public List<MailHighlightRule> HighlightRules { get; set; }
 
-        [DisplayName("Popup Delay (ms)")]
+        [DisplayName(@"Popup Delay (ms)")]
         public int PopupDelay { get; set; }
 
-        [DisplayName("Polling Interval (ms)")]
+        [DisplayName(@"Polling Interval (ms)")]
         public int PollingInterval { get; set; }
 
         public Configuration()
