@@ -1,0 +1,36 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+        <PropertyGroup>
+                <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+                <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+                <ProductVersion>3.0</ProductVersion>
+                <ProjectGuid>{3321DCF1-C5D5-4C64-8BDC-84CCCA24F644}</ProjectGuid>
+                <SchemaVersion>2.0</SchemaVersion>
+                <OutputName>IMap.Popup</OutputName>
+                <OutputType>Package</OutputType>				
+                <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+        </PropertyGroup>
+        <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+                <OutputPath>bin\$(Configuration)\</OutputPath>
+                <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+                <DefineConstants>Debug</DefineConstants>
+        </PropertyGroup>
+        <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+                <OutputPath>bin\$(Configuration)\</OutputPath>
+                <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+        </PropertyGroup>
+        <ItemGroup>
+                <Compile Include="Product.wxs" />
+                <Compile Include="Project.wxs" />
+        </ItemGroup>
+        <ItemGroup>
+			<ProjectReference Include="..\IMAP.Popup\IMAP.Popup.csproj">
+				<Name>IMAP.Popup</Name>
+				<Project>{3321DCF1-C5D5-4C64-8BDC-84CCCA24F644}</Project>
+				<Private>True</Private>
+				<DoNotHarvest>True</DoNotHarvest>
+				<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+				<RefTargetDir>INSTALLFOLDER</RefTargetDir>
+			</ProjectReference>		
+        </ItemGroup>
+        <Import Project="$(WixTargetsPath)" />
+    </Project>

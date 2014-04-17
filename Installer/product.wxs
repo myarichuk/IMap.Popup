@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="IMap.Popup Setup" Language="1033" Version="1.0.0.0" Manufacturer="Michael Yarichuk" 
+	UpgradeCode="a897d164-1252-4d33-978b-b33fddd41685">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+        
+		<Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
+        <Feature Id="ProductFeature" Title="IMAP.Popup" Level="1">
+            <ComponentGroupRef Id="AppFilesAndLibs" />			
+        </Feature>
+        <UI />
+    </Product>
+	
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="IMap.Popup"/>					
+			</Directory>
+		</Directory>
+	</Fragment>
+</Wix>
