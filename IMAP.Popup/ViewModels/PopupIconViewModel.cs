@@ -22,11 +22,13 @@ namespace IMAP.Popup.ViewModels
         private readonly PopupIconModel _model;
         private readonly TaskbarIcon _taskbarIcon;
         private readonly BlockingCollection<Email> _incomingMail;
+        private readonly EmailViewModel _emailViewModel;
         private bool _isApplicationActive;
         private readonly Thread _incomingMailPopupHandler;					
 
         public PopupIconViewModel(IWindowManager windowManager,                                  
                                   ConfigurationViewModel configurationViewModel,
+                                  EmailViewModel emailViewModel,
                                   PopupIconModel model,
                                   TaskbarIcon taskbarIcon)
         {
@@ -35,6 +37,8 @@ namespace IMAP.Popup.ViewModels
             _configurationViewModel = configurationViewModel;
             _model.MailServerPolled += OnMailServerPolled;
             _model.MailReceived += OnMailReceived;
+            _model.MailPollingDisabled += () => NotifyOfPropertyChange(() => IsChecked);
+            _emailViewModel = emailViewModel;
             _taskbarIcon = taskbarIcon;
             _isApplicationActive = true;
             _incomingMailPopupClosedEvent = new ManualResetEventSlim();
@@ -124,8 +128,16 @@ namespace IMAP.Popup.ViewModels
             {
 	            newMailBaloon = new NewMailBaloon();
 	            newMailBaloon.BaloonClosing += IncomingEmail_Popup_Closed;
+                newMailBaloon.OpenFullMailView += emailUid =>
+                {
+                    _emailViewModel.Set(email);
+                    if(!_emailViewModel.IsViewLoaded)
+                        _windowManager.ShowWindow(_emailViewModel);
+                };
+
 	            newMailBaloon.Dispatcher.Invoke(() =>
 	            {
+                    newMailBaloon.EmailUid = email.MessageUid;
 		            newMailBaloon.FromText = email.From;
 		            newMailBaloon.SubjectText = email.Subject;
 		            newMailBaloon.HighlightBrush = GetHighlightBrushFromRules(email, configuration.HighlightRules ?? new List<MailHighlightRule>());

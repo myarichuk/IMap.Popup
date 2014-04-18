@@ -13,7 +13,7 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
         <ext:PropertyGrid Grid.Row="0" Margin="5" x:Name="ConfigurationGrid" 
-                          SelectedObject="{Binding ConfigurationData,Mode=TwoWay}"/>
+                          SelectedObject="{Binding ConfigurationData}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1">
             <Button Margin="10" Width="70" Content="Save" >
                 <i:Interaction.Triggers>                                       

@@ -15,6 +15,7 @@ namespace IMAP.Popup.Views
         private bool _isClosing;
 
         public event Action BaloonClosing;
+        public event Action<uint> OpenFullMailView;
 
         public static readonly DependencyProperty SubjectTextProperty =
         DependencyProperty.Register("SubjectText",
@@ -50,7 +51,9 @@ namespace IMAP.Popup.Views
             {
                 HighlightRectangle.Fill = value; 
             }
-        }        
+        }
+
+        public uint EmailUid { get; set; }
 
         public NewMailBaloon()
         {
@@ -90,5 +93,14 @@ namespace IMAP.Popup.Views
             System.Windows.Controls.Primitives.Popup pp = (System.Windows.Controls.Primitives.Popup)Parent;
             pp.IsOpen = false;
         }
+
+        private void OnMouseClick(object sender, MouseButtonEventArgs e)
+        {
+            var openFullMailViewEventHandler = OpenFullMailView;
+            if (openFullMailViewEventHandler != null)
+                openFullMailViewEventHandler(EmailUid);
+        }
+
+     
     }
 }

@@ -1,0 +1,49 @@
+﻿<Window x:Class="IMAP.Popup.Views.EmailView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:IMAP.Popup.Utils"
+        xmlns:cal="clr-namespace:Caliburn.Micro;assembly=Caliburn.Micro"
+         Height="500" Width="600" MinWidth="500" MinHeight="450" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="5" VerticalAlignment="Center"                     
+                    HorizontalAlignment="Stretch" Orientation="Horizontal">
+            <TextBlock Text="From: " Margin="5" />
+            <TextBlock x:Name="From" Margin="5" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="5" VerticalAlignment="Center"                     
+                    HorizontalAlignment="Stretch" Orientation="Horizontal">
+            <TextBlock Text="To: " Margin="5" />
+            <TextBlock x:Name="To" Margin="5" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Margin="5" VerticalAlignment="Center"                     
+                    HorizontalAlignment="Stretch" Orientation="Horizontal">
+            <TextBlock Text="Cc: " Margin="5" />
+            <TextBlock x:Name="Cc" Margin="5" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="5" VerticalAlignment="Center"                     
+                    HorizontalAlignment="Stretch" Orientation="Horizontal">
+            <TextBlock Text="Subject: " Margin="5" />
+            <TextBlock x:Name="Subject" Margin="5" />
+        </StackPanel>
+
+        <WebBrowser Grid.Row="4" Margin="5"
+                    local:WebBrowserUtility.BindableSource="{Binding EmailContent}"
+                    cal:Bind.Model="IMAP.Popup.ViewModels.EmailViewModel" />
+        
+        <StackPanel Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+            <Button x:Name="MarkAsRead" Content="Mark As Read and Close" Padding="5" Margin="5" Width="150" />
+            <Button x:Name="TryClose" Content="Just Close" Padding="5" Margin="5" Width="100" />
+        </StackPanel>        
+    </Grid>
+</Window>

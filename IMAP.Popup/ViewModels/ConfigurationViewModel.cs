@@ -20,14 +20,9 @@ namespace IMAP.Popup.ViewModels
         {
             get
             {
-                var configurationData = _model.LoadConfiguration() ?? new Configuration();
+                var configurationData = _model.LoadConfiguration();
                 return configurationData;
-            }
-            set
-            {
-                _model.SaveConfiguration(value);
-                NotifyOfPropertyChange(() => ConfigurationData);
-            }
+            }            
         }
 
         public void SaveConfiguration(Configuration configurationData)

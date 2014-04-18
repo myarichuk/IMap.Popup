@@ -93,7 +93,9 @@
         <Border HorizontalAlignment="Stretch"
                 Margin="5,5,5,5"
                 BorderThickness="1,1,1,1"
-                BorderBrush="#FF997137">
+                BorderBrush="#FF997137"
+                Cursor="Hand"
+                MouseDown="OnMouseClick">
             <Border.Effect>
                 <DropShadowEffect Color="#FF747474" />
             </Border.Effect>
@@ -109,7 +111,10 @@
             <TextBlock Margin="89,52,-1,0"
         		VerticalAlignment="Top"
         		Foreground="#FFECAD25"
-        		TextWrapping="Wrap"><Run FontStyle="Italic"
+        		TextWrapping="Wrap"
+                Cursor="Hand"
+                MouseDown="OnMouseClick">
+                <Run FontStyle="Italic"
         			FontWeight="Bold"
         			Text="Subject:" /><Run Text=" "/><Run Text="{Binding SubjectText, ElementName=me, Mode=Default}" /></TextBlock>
         </Border>
@@ -120,14 +125,18 @@
                Source="/Images/incoming_mail_icon.png"
                Stretch="Fill"
                Height="72"
-               VerticalAlignment="Top" />
+               VerticalAlignment="Top"
+               Cursor="Hand"
+               MouseDown="OnMouseClick"/>
 
         <TextBlock Margin="95,26,5,0"
                    VerticalAlignment="Top"
                    Height="23"
                    TextWrapping="Wrap"
                    Foreground="#FFECAD25"
-                   FontWeight="Bold">
+                   FontWeight="Bold"
+                   Cursor="Hand"
+                   MouseDown="OnMouseClick">
                         <Run FontStyle="Italic"
                  FontWeight="Bold"
                  Text="From:" />

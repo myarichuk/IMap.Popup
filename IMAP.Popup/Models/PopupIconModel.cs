@@ -64,6 +64,7 @@ namespace IMAP.Popup.Models
 
 		public event Action<Email> MailReceived;
 		public event Action MailServerPolled;
+        public event Action MailPollingDisabled;
 
 		public void ResetLastFetchDate()
 		{
@@ -83,11 +84,10 @@ namespace IMAP.Popup.Models
 			{
 				if (IsPollingActive)
 				{
-					List<Tuple<UniqueId, MimeMessage>> fetchedMails = FetchNewMails().ToList();
-					var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-					List<Tuple<UniqueId, MimeMessage>> relevantFetchedMails =
-						fetchedMails.Where(x => x.Item2.Date.UtcDateTime >= lastFetchDate)
-							.ToList();
+					var fetchedMails = FetchNewMails().ToList();
+					
+                    var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
+					var relevantFetchedMails = fetchedMails.Where(x => x.Item2.Date.UtcDateTime >= lastFetchDate).ToList();
 					if (relevantFetchedMails.Any())
 					{
 						OnMailReceive(relevantFetchedMails);
@@ -95,7 +95,7 @@ namespace IMAP.Popup.Models
 					}
 				}
 
-				Configuration configuration = _persistanceModel.LoadConfiguration();
+                var configuration = GetConfiguration();
 				Thread.Sleep(configuration.PollingInterval);
 			}
 		}
@@ -105,16 +105,45 @@ namespace IMAP.Popup.Models
 			Action<Email> mailReceivedEvent = MailReceived;
 			if (mailReceivedEvent != null)
 			{
-				foreach (var mailWithUid in fetchedMailsWithUids)
-					mailReceivedEvent(new Email
-					{
-						From = mailWithUid.Item2.From.First().ToString(),
-						To = mailWithUid.Item2.To.Select(x => x.ToString()).ToArray(),
-						Cc = mailWithUid.Item2.Cc.Select(x => x.ToString()).ToArray(),
-						Subject = mailWithUid.Item2.Subject,
-						WhenSent = mailWithUid.Item2.Date.UtcDateTime,
-						MessageUid = mailWithUid.Item1.Id
-					});
+                foreach (var mailWithUid in fetchedMailsWithUids)
+                {
+                    var newMail = new Email
+                    {
+                        From = mailWithUid.Item2.From.First().ToString(),
+                        To = mailWithUid.Item2.To.Select(x => x.ToString()).ToArray(),
+                        Cc = mailWithUid.Item2.Cc.Select(x => x.ToString()).ToArray(),
+                        Subject = mailWithUid.Item2.Subject,
+                        WhenSent = mailWithUid.Item2.Date.UtcDateTime,
+                        MessageUid = mailWithUid.Item1.Id,
+                        HasAttachments = mailWithUid.Item2.BodyParts.Any(x => x.IsAttachment),
+                    };
+
+                    var textParts = mailWithUid.Item2.BodyParts.Where(x => x is TextPart).ToList();
+                    if(textParts.Count > 0)
+                    {
+                        if (String.Equals(textParts.First().ContentType.MediaType, "text", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            if (textParts.All(part => String.Equals(part.ContentType.MediaSubtype, "plain")))
+                                newMail.MimeType = Email.ContentType.PlainText;
+                            else if (textParts.Any(part => String.Equals(part.ContentType.MediaSubtype, "html")))
+                                newMail.MimeType = Email.ContentType.Html;
+                        }
+
+                        if (newMail.MimeType.HasValue)
+                        {   
+                         
+                            if(newMail.MimeType == Email.ContentType.PlainText)
+                                newMail.Content = 
+                                    textParts.Aggregate(String.Empty, (seed, part) => seed += ((TextPart)part).Text);
+                            else if (newMail.MimeType == Email.ContentType.Html)
+                                newMail.Content =
+                                    textParts.Where(part => part.ContentType.MediaSubtype == "html")
+                                             .Aggregate(String.Empty, (seed, part) => seed += ((TextPart)part).Text);
+                        }
+                    }
+
+                    mailReceivedEvent(newMail);
+                }
 			}
 		}
 
@@ -135,19 +164,16 @@ namespace IMAP.Popup.Models
 
 						mailClient.Authenticate(credentials, cancel.Token);
 
-						IFolder inbox = mailClient.Inbox;
+						var inbox = mailClient.Inbox;
+
 						inbox.Open(FolderAccess.ReadOnly, cancel.Token);
+						var unreadMailUids = inbox.Search(SearchQuery.NotSeen, cancel.Token);
 
-						UniqueId[] recentMailUids = null;
-						var lastFetchDate = _persistanceModel.Get<DateTime>(LastFetchDateKey);
-						recentMailUids = inbox.Search(SearchQuery.NotSeen
-							.And(SearchQuery.DeliveredAfter(lastFetchDate)), cancel.Token);
-
-						UnreadMailCount = inbox.Search(SearchQuery.NotSeen, cancel.Token).Length;
+                        UnreadMailCount = unreadMailUids.Length;
 						OnMailServerPolled();
 
-						if (recentMailUids != null)
-							results.AddRange(recentMailUids.Select(uid =>
+						if (unreadMailUids != null)
+							results.AddRange(unreadMailUids.Select(uid =>
 								Tuple.Create(uid, inbox.GetMessage(uid, cancel.Token))));
 					}
 				}
@@ -158,6 +184,11 @@ namespace IMAP.Popup.Models
 					"Mail polling failed. Reason: " + e.Message + ". It will be disabled. Correct the error and re-enable mail polling",
 					"Error", MessageBoxButton.OK, MessageBoxImage.Warning);
 				IsPollingActive = false;
+                if (MailPollingDisabled != null)
+                    MailPollingDisabled();
+                
+                UnreadMailCount = 0;
+                OnMailServerPolled();                
 			}
 
 			return results;

@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace IMAP.Popup.Models
 {
@@ -65,7 +66,16 @@ namespace IMAP.Popup.Models
         public Configuration LoadConfiguration()
         {
             using (var session = _documentStore.OpenSession())
-                return session.Load<Configuration>(ConfigurationDocumentId) ?? new Configuration();
+            {
+                var configuration = session.Load<Configuration>(ConfigurationDocumentId);
+                if(configuration == null)
+                {
+                    MessageBox.Show("Configuration is empty. In order to configure IMap.Popup, open context menu on the icon, and select Configure.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return new Configuration();
+                }
+
+                return configuration;
+            }
         }
 
         public void SaveConfiguration(Configuration configuration)

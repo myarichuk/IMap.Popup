@@ -38,7 +38,6 @@ namespace IMAP.Popup.Bootstrap
                 {
                     var store = new EmbeddableDocumentStore();
                     store.Initialize();
-
                     return store;
                 }).LifestyleSingleton(),
                 Classes.FromThisAssembly()
@@ -56,7 +55,6 @@ namespace IMAP.Popup.Bootstrap
 			System.Threading.Tasks.Task.Run(() =>
 			{
 				_container.Resolve<IDocumentStore>();
-				_container.Resolve<PopupIconModel>();
 				_container.Resolve<PopupIconViewModel>();
 			});
 		}

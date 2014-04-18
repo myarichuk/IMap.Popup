@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IMAP.Popup.Models
 {
@@ -17,5 +13,18 @@ namespace IMAP.Popup.Models
         public DateTime WhenSent { get; set; }
 
         public uint MessageUid { get; set; }
+
+        public bool HasAttachments { get; set; }
+
+        public ContentType? MimeType { get; set; }
+
+        public string Content { get; set; }
+
+        public enum ContentType
+        {
+            PlainText,
+            Html
+        }
+
     }
 }

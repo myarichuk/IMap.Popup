@@ -60,14 +60,6 @@ namespace IMAP.Popup.Models
         public int PopupDelay { get; set; }
 
         [DisplayName(@"Polling Interval (ms)")]
-        public int PollingInterval { get; set; }
-
-        public Configuration()
-        {
-	        ImapServer = String.Empty;
-            ImapPort = 143;
-            PopupDelay = 4000; //default delay
-            PollingInterval = 1000; //default polling latency
-        }
+        public int PollingInterval { get; set; }      
     }
 }
