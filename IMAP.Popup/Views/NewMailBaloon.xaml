@@ -5,7 +5,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:tb="http://www.hardcodet.net/taskbar"
              x:Name="me"
-             Height="120"
+             Height="130"
              Width="450">
     <UserControl.Resources>
         <Storyboard x:Key="FadeIn">
@@ -118,7 +118,8 @@
         			FontWeight="Bold"
         			Text="Subject:" /><Run Text=" "/><Run Text="{Binding SubjectText, ElementName=me, Mode=Default}" /></TextBlock>
         </Border>
-        <Rectangle x:Name="HighlightRectangle" Width="150" Height="10" Margin="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" Fill="{Binding HighlightBrush}" />            
+        <Rectangle x:Name="HighlightRectangle" Width="150" Height="10" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Center" Fill="{Binding HighlightBrush}" />
+        <Button Width="150" Height="25" Content="Remind me later" Margin="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" />
         <Image HorizontalAlignment="Left"
                Margin="18,26,0,0"
                Width="72"

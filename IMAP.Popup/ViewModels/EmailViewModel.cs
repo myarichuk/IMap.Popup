@@ -14,6 +14,8 @@ namespace IMAP.Popup.ViewModels
         private readonly EmailModel _emailModel;
         private bool _isViewLoaded;
 
+        public event System.Action EmailViewClosing;
+
         public EmailViewModel(EmailModel emailModel)
         {
             _emailModel = emailModel;
@@ -38,6 +40,9 @@ namespace IMAP.Popup.ViewModels
         {
             base.CanClose(callback);
             _isViewLoaded = false;
+            var emailViewClosing = EmailViewClosing;
+            if (emailViewClosing != null)
+                emailViewClosing();
         }
 
         public void Set(Email email)

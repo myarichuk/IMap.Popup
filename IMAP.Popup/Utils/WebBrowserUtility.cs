@@ -7,8 +7,9 @@ using System.Windows;
 
 namespace IMAP.Popup.Utils
 {
-    //this solution is taken from a StackOverflow question
+    //this is taken from a StackOverflow question
     //http://stackoverflow.com/questions/7728707/webbrowser-in-wpf-using-mvvm-pattern
+    //credit to Shai (http://stackoverflow.com/users/766497/shai)
     public static class WebBrowserUtility
     {
         public static readonly DependencyProperty BindableSourceProperty =

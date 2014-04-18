@@ -130,6 +130,7 @@ namespace IMAP.Popup.ViewModels
 	            newMailBaloon.BaloonClosing += IncomingEmail_Popup_Closed;
                 newMailBaloon.OpenFullMailView += emailUid =>
                 {
+                    
                     _emailViewModel.Set(email);
                     if(!_emailViewModel.IsViewLoaded)
                         _windowManager.ShowWindow(_emailViewModel);

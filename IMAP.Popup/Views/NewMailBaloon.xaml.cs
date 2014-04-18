@@ -74,6 +74,11 @@ namespace IMAP.Popup.Views
 
         private void imgClose_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            Close();
+        }
+
+        public void Close()
+        {
             //the tray icon assigned this attached property to simplify access
             TaskbarIcon taskbarIcon = TaskbarIcon.GetParentTaskbarIcon(this);
             taskbarIcon.CloseBalloon();

@@ -161,6 +161,9 @@
     <Compile Include="Views\NewMailBaloon.xaml.cs">
       <DependentUpon>NewMailBaloon.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\RemindMeLaterView.xaml.cs">
+      <DependentUpon>RemindMeLaterView.xaml</DependentUpon>
+    </Compile>
     <Page Include="TaskbarIconResource.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -174,6 +177,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NewMailBaloon.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RemindMeLaterView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -213,13 +220,10 @@
     <Resource Include="Images\incoming_mail_icon.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\mail_icon.png" />
+    <Resource Include="appicon.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\appicon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="appicon.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\appicon-image.png" />

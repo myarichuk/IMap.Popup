@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Media;
+using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 
 namespace IMAP.Popup.Models
 {
@@ -26,18 +27,26 @@ namespace IMAP.Popup.Models
 
     public class Configuration
     {
+        [Category("IMAP Server Configuration")]        
         public string Username { get; set; }
 
+        [Category("IMAP Server Configuration")]
+        [PasswordPropertyText(true)]
         public string Password { get; set; }
 
         [DisplayName(@"IMAP Server Hostname")]
+        [Category("IMAP Server Configuration")]
         public string ImapServer { get; set; }
 
         [DisplayName(@"IMAP Port")]
+        [DefaultValue(993)]
+        [Category("IMAP Server Configuration")]
         public uint ImapPort { get; set; }
 
         private ImapAuthentication _authentication;
+
         [DisplayName(@"IMAP Authentication")]
+        [Category("IMAP Server Configuration")]
         public ImapAuthentication Authentication 
         {
             get
@@ -53,13 +62,26 @@ namespace IMAP.Popup.Models
             }
         }
 
-        [DisplayName(@"Highlighting Rules")]
-        public List<MailHighlightRule> HighlightRules { get; set; }
-
-        [DisplayName(@"Popup Delay (ms)")]
-        public int PopupDelay { get; set; }
 
         [DisplayName(@"Polling Interval (ms)")]
-        public int PollingInterval { get; set; }      
+        [Description("Polling interval for checking new mail")]
+        [Category("IMAP Server Configuration")]
+        [DefaultValue(1000)]
+        public int PollingInterval { get; set; }
+
+        [DisplayName(@"Popup Delay (ms)")]
+        [Description("How much time the email popup will remain visible")]
+        [DefaultValue(4000)]
+        [Category("Appearance")]
+        public int PopupDelay { get; set; }
+
+        [DisplayName(@"Highlighting Rules")]
+        [Category("Appearance")]
+        public List<MailHighlightRule> HighlightRules { get; set; }
+
+        [DisplayName("Remind later delays")]
+        [Description("Possible intervals for the mail reminder to appear")]
+        [Category("General Configuration")]
+        public List<long> RemindMeTimespans { get; set; }
     }
 }
