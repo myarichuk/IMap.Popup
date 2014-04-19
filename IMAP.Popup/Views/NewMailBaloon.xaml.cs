@@ -2,20 +2,27 @@
   Parts of code in this file were adapted from sample of Wpf NotifyIcon, awesome project by Philipp Sumi (http://www.hardcodet.net)
  */
 using Hardcodet.Wpf.TaskbarNotification;
+using IMAP.Popup.Models;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Linq;
+using System.Windows.Threading;
+using Humanizer;
 
 namespace IMAP.Popup.Views
 {
     public partial class NewMailBaloon : UserControl
     {
         private bool _isClosing;
+        private readonly PersistanceModel _persistanceModel;
 
-        public event Action BaloonClosing;
+        public event Action<NewMailBaloon> BaloonClosing;
         public event Action<uint> OpenFullMailView;
+        public event Action<long> RemindMeLaterSelected;
 
         public static readonly DependencyProperty SubjectTextProperty =
         DependencyProperty.Register("SubjectText",
@@ -55,20 +62,102 @@ namespace IMAP.Popup.Views
 
         public uint EmailUid { get; set; }
 
-        public NewMailBaloon()
+        public NewMailBaloon(PersistanceModel persistanceModel)
         {
             InitializeComponent();
+            _persistanceModel = persistanceModel;
             HighlightRectangle.Fill = new SolidColorBrush(Colors.Transparent);
             TaskbarIcon.AddBalloonClosingHandler(this, OnBalloonClosing);
+            AddRemindMeTimingsIfNeeded();
         }
 
+        private void AddRemindMeTimingsIfNeeded()
+        {
+            var configuration = _persistanceModel.LoadConfiguration();
+
+            RemindMePanel.Dispatcher.Invoke(() =>
+            {
+                if (configuration.RemindMeTimespans != null && configuration.RemindMeTimespans.Any(x => x > 0))
+                {
+                    foreach (var remindDelay in configuration.RemindMeTimespans.Where(x => x > 0))
+                    {                        
+                        var remindDelayInMilliseconds = remindDelay;
+                        var remindDelayTextBlock = new TextBlock
+                        {
+                            Text = "+" + TimeSpan.FromMilliseconds(remindDelayInMilliseconds)
+                                                 .Humanize(precision: 3),
+                            FontWeight = FontWeights.Bold,
+                            Foreground = new SolidColorBrush(Colors.Black),
+                            Margin = new Thickness(5),
+                            Cursor = Cursors.Hand,
+                        };
+
+                        remindDelayTextBlock.MouseEnter += (sender, args) =>
+                        {
+                            var txtBlock = sender as TextBlock;
+                            txtBlock.FontWeight = FontWeights.ExtraBold;
+                        };
+
+                        remindDelayTextBlock.Tag = remindDelayInMilliseconds;
+
+                        remindDelayTextBlock.MouseLeave += (sender, args) =>
+                        {
+                            var txtBlock = sender as TextBlock;
+                            txtBlock.FontWeight = FontWeights.Bold;
+                        };
+
+                        remindDelayTextBlock.Visibility = System.Windows.Visibility.Visible;
+                        RemindMePanel.Children.Add(remindDelayTextBlock);
+                    }
+
+                    foreach(var textBlock in RemindMePanel.Children.OfType<TextBlock>())
+                    {
+                        textBlock.MouseDown += (sender, args) =>
+                        {
+                            var remindMeSelected = RemindMeLaterSelected;
+                            if (remindMeSelected != null)
+                                remindMeSelected((long)textBlock.Tag);
+                            var txtBlock = sender as TextBlock;
+                            if (((SolidColorBrush)txtBlock.Foreground).Color == Colors.Black)
+                            {
+                                foreach (var txt in RemindMePanel.Children.OfType<TextBlock>()
+                                                                          .Where(x => !ReferenceEquals(x,txtBlock)))
+                                    txt.Foreground = new SolidColorBrush(Colors.Black);
+
+                                txtBlock.Foreground = new SolidColorBrush(Colors.Red);
+                            }
+                            else
+                                txtBlock.Foreground = new SolidColorBrush(Colors.Black);
+                        };
+                    }
+
+                    RemindMePanel.Visibility = System.Windows.Visibility.Visible;
+                    RemindMePanel.InvalidateArrange();
+                    RemindMePanel.InvalidateVisual();
+                }
+                else
+                    RemindMePanel.Visibility = System.Windows.Visibility.Hidden;
+            }, DispatcherPriority.DataBind);
+        }
+
+        public bool IsFollowupSelected { get; private set; }
+
+        public string FollowupIconSource
+        {
+            get
+            {
+                return IsFollowupSelected ? 
+                    "/Images/followup-red-icon.png" :
+                    "/Images/followup-black-icon.png";
+            }
+        }
 
         private void OnBalloonClosing(object sender, RoutedEventArgs e)
         {
             e.Handled = true; //suppresses the popup from being closed immediately
             _isClosing = true;
             if (BaloonClosing != null)
-                BaloonClosing();
+                BaloonClosing(this);
         }
 
 
@@ -104,6 +193,12 @@ namespace IMAP.Popup.Views
             var openFullMailViewEventHandler = OpenFullMailView;
             if (openFullMailViewEventHandler != null)
                 openFullMailViewEventHandler(EmailUid);
+        }
+
+        private void FollowupMouseClick(object sender, MouseButtonEventArgs e)
+        {
+            IsFollowupSelected = !IsFollowupSelected;
+            FollowupIcon.Source = new BitmapImage(new Uri("pack://application:,,,/IMAP.Popup;component" + FollowupIconSource));            
         }
 
      

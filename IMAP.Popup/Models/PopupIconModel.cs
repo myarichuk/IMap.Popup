@@ -95,8 +95,8 @@ namespace IMAP.Popup.Models
 					}
 				}
 
-                var configuration = GetConfiguration();
-				Thread.Sleep(configuration.PollingInterval);
+                var configuration = GetConfiguration();                
+				Thread.Sleep((configuration != null) ? configuration.PollingInterval : 1000);
 			}
 		}
 

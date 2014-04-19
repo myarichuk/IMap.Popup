@@ -43,24 +43,10 @@ namespace IMAP.Popup.Models
         [Category("IMAP Server Configuration")]
         public uint ImapPort { get; set; }
 
-        private ImapAuthentication _authentication;
-
         [DisplayName(@"IMAP Authentication")]
         [Category("IMAP Server Configuration")]
-        public ImapAuthentication Authentication 
-        {
-            get
-            {
-                return _authentication;
-            }
-            set
-            {
-                if (ImapPort == 0)
-                    ImapPort = (uint) (value == ImapAuthentication.SSL ? 993 : 143);
-                
-				_authentication = value;
-            }
-        }
+        [DefaultValue(ImapAuthentication.SSL)]
+        public ImapAuthentication Authentication { get; set; }
 
 
         [DisplayName(@"Polling Interval (ms)")]
@@ -79,7 +65,7 @@ namespace IMAP.Popup.Models
         [Category("Appearance")]
         public List<MailHighlightRule> HighlightRules { get; set; }
 
-        [DisplayName("Remind later delays")]
+        [DisplayName("Remind later delays (ms)")]
         [Description("Possible intervals for the mail reminder to appear")]
         [Category("General Configuration")]
         public List<long> RemindMeTimespans { get; set; }

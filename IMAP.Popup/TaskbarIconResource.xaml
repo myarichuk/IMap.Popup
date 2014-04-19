@@ -20,6 +20,7 @@
                   cal:Bind.Model="IMAP.Popup.ViewModels.PopupIconViewModel"
                   IsChecked="{Binding IsChecked, Mode=TwoWay}"
                   IsCheckable="True"/>
+        <MenuItem Header="Followup List" cal:Message.Attach="ShowFollowupList"/>
         <Separator />
         <MenuItem Header="Exit" cal:Message.Attach="ExitApplication" />
     </ContextMenu>

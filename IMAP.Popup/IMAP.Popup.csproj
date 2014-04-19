@@ -53,6 +53,10 @@
     <Reference Include="Hardcodet.Wpf.TaskbarNotification">
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net45\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
     </Reference>
+    <Reference Include="Humanizer, Version=1.23.1.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libraries\Humanizer.dll</HintPath>
+    </Reference>
     <Reference Include="MailKit">
       <HintPath>..\packages\MailKit.0.9.0.0\lib\net40\MailKit.dll</HintPath>
     </Reference>
@@ -146,6 +150,7 @@
     <Compile Include="Models\Configuration.cs" />
     <Compile Include="Models\Email.cs" />
     <Compile Include="Models\PopupIconModel.cs" />
+    <Compile Include="Utils\ShortTimespanHumanizeFormatter.cs" />
     <Compile Include="Utils\StringExtensions.cs" />
     <Compile Include="Utils\WebBrowserUtility.cs" />
     <Compile Include="ViewModels\ConfigurationViewModel.cs" />
@@ -161,9 +166,6 @@
     <Compile Include="Views\NewMailBaloon.xaml.cs">
       <DependentUpon>NewMailBaloon.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\RemindMeLaterView.xaml.cs">
-      <DependentUpon>RemindMeLaterView.xaml</DependentUpon>
-    </Compile>
     <Page Include="TaskbarIconResource.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -177,10 +179,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NewMailBaloon.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\RemindMeLaterView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -227,6 +225,19 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\appicon-image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\attachments-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\todo-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\followup-black-icon.png" />
+    <Resource Include="Images\remindme-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\followup-red-icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

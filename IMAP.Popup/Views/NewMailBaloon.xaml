@@ -1,12 +1,12 @@
 ﻿<!-- Parts of what is here adapted from FancyBalloon.xaml from samples (structure of xaml and animations) -->
 <!-- the samples are from Wpf NotifyIcon, awesome project by Philipp Sumi (http://www.hardcodet.net) -->
-    <UserControl x:Class="IMAP.Popup.Views.NewMailBaloon"
+<UserControl x:Class="IMAP.Popup.Views.NewMailBaloon"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:tb="http://www.hardcodet.net/taskbar"
              x:Name="me"
              Height="130"
-             Width="450">
+             Width="485">
     <UserControl.Resources>
         <Storyboard x:Key="FadeIn">
             <DoubleAnimationUsingKeyFrames BeginTime="00:00:00"
@@ -119,7 +119,21 @@
         			Text="Subject:" /><Run Text=" "/><Run Text="{Binding SubjectText, ElementName=me, Mode=Default}" /></TextBlock>
         </Border>
         <Rectangle x:Name="HighlightRectangle" Width="150" Height="10" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Center" Fill="{Binding HighlightBrush}" />
-        <Button Width="150" Height="25" Content="Remind me later" Margin="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" />
+
+        <Image x:Name="FollowupIcon"
+               Width="30" Height="30" Margin="0,0,15,10" 
+               VerticalAlignment="Bottom" 
+               HorizontalAlignment="Right"
+               Cursor="Hand"
+               Source="/Images/followup-black-icon.png"
+               MouseDown="FollowupMouseClick"/>
+
+        <StackPanel x:Name="RemindMePanel" Orientation="Horizontal" Width="398" Height="30" Margin="20,0,0,10" 
+               VerticalAlignment="Bottom" 
+               HorizontalAlignment="Left">
+            <Image Margin="5" Source="/Images/remindme-icon.png" />
+        </StackPanel>
+
         <Image HorizontalAlignment="Left"
                Margin="18,26,0,0"
                Width="72"
@@ -154,7 +168,7 @@
                ToolTip="Close Balloon"
                x:Name="imgClose"
                MouseDown="imgClose_MouseDown" />
-        
+
 
     </Grid>
 </UserControl>

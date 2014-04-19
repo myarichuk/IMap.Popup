@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Raven.Database.Tasks;
+using IMAP.Popup.Utils;
 
 namespace IMAP.Popup.Bootstrap
 {
@@ -57,6 +58,8 @@ namespace IMAP.Popup.Bootstrap
 				_container.Resolve<IDocumentStore>();
 				_container.Resolve<PopupIconViewModel>();
 			});
+            
+            Humanizer.Configuration.Configurator.CustomDefaultFormatter = new ShortTimespanHumanizeFormatter();
 		}
 
         protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)

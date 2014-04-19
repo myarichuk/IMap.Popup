@@ -24,16 +24,19 @@ namespace IMAP.Popup.ViewModels
         private readonly BlockingCollection<Email> _incomingMail;
         private readonly EmailViewModel _emailViewModel;
         private bool _isApplicationActive;
-        private readonly Thread _incomingMailPopupHandler;					
+        private readonly Thread _incomingMailPopupHandler;
+        private readonly PersistanceModel _persistanceModel;
 
         public PopupIconViewModel(IWindowManager windowManager,                                  
                                   ConfigurationViewModel configurationViewModel,
                                   EmailViewModel emailViewModel,
                                   PopupIconModel model,
+                                  PersistanceModel persistanceModel,
                                   TaskbarIcon taskbarIcon)
         {
             _windowManager = windowManager;
             _model = model;
+            _persistanceModel = persistanceModel;
             _configurationViewModel = configurationViewModel;
             _model.MailServerPolled += OnMailServerPolled;
             _model.MailReceived += OnMailReceived;
@@ -61,6 +64,11 @@ namespace IMAP.Popup.ViewModels
         public void ShowConfiguration()
         {
             _windowManager.ShowDialog(_configurationViewModel);
+        }
+
+        public void ShowFollowupList()
+        {
+            //TODO :finish here
         }
 
        public bool IsChecked
@@ -126,16 +134,16 @@ namespace IMAP.Popup.ViewModels
                         
             _taskbarIcon.Dispatcher.Invoke(() =>
             {
-	            newMailBaloon = new NewMailBaloon();
+	            newMailBaloon = new NewMailBaloon(_persistanceModel);
 	            newMailBaloon.BaloonClosing += IncomingEmail_Popup_Closed;
                 newMailBaloon.OpenFullMailView += emailUid =>
-                {
-                    
+                {                    
                     _emailViewModel.Set(email);
+                    _emailViewModel.EmailViewClosing += () => newMailBaloon.Close();
                     if(!_emailViewModel.IsViewLoaded)
                         _windowManager.ShowWindow(_emailViewModel);
                 };
-
+                
 	            newMailBaloon.Dispatcher.Invoke(() =>
 	            {
                     newMailBaloon.EmailUid = email.MessageUid;
@@ -148,8 +156,13 @@ namespace IMAP.Popup.ViewModels
             _taskbarIcon.ShowCustomBalloon(newMailBaloon, PopupAnimation.Slide, configuration.PopupDelay);
         }
 
-        private void IncomingEmail_Popup_Closed()
+        private void IncomingEmail_Popup_Closed(NewMailBaloon sender)        
         {
+            if(sender.IsFollowupSelected)
+            {
+                //TODO : finish here adding email to followup list
+            }   
+         
 			_incomingMailPopupClosedEvent.Set();
 		}
 

@@ -66,16 +66,7 @@ namespace IMAP.Popup.Models
         public Configuration LoadConfiguration()
         {
             using (var session = _documentStore.OpenSession())
-            {
-                var configuration = session.Load<Configuration>(ConfigurationDocumentId);
-                if(configuration == null)
-                {
-                    MessageBox.Show("Configuration is empty. In order to configure IMap.Popup, open context menu on the icon, and select Configure.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return new Configuration();
-                }
-
-                return configuration;
-            }
+                return session.Load<Configuration>(ConfigurationDocumentId) ?? new Configuration();
         }
 
         public void SaveConfiguration(Configuration configuration)
