@@ -134,11 +134,11 @@ namespace IMAP.Popup.Models
                          
                             if(newMail.MimeType == Email.ContentType.PlainText)
                                 newMail.Content = 
-                                    textParts.Aggregate(String.Empty, (seed, part) => seed += ((TextPart)part).Text);
+                                    textParts.Aggregate(String.Empty, (seed, part) => seed + ((TextPart)part).Text);
                             else if (newMail.MimeType == Email.ContentType.Html)
                                 newMail.Content =
                                     textParts.Where(part => part.ContentType.MediaSubtype == "html")
-                                             .Aggregate(String.Empty, (seed, part) => seed += ((TextPart)part).Text);
+                                             .Aggregate(String.Empty, (seed, part) => seed + ((TextPart)part).Text);
                         }
                     }
 
@@ -169,12 +169,14 @@ namespace IMAP.Popup.Models
 						inbox.Open(FolderAccess.ReadOnly, cancel.Token);
 						var unreadMailUids = inbox.Search(SearchQuery.NotSeen, cancel.Token);
 
-                        UnreadMailCount = unreadMailUids.Length;
-						OnMailServerPolled();
-
 						if (unreadMailUids != null)
+						{
+							UnreadMailCount = unreadMailUids.Length;
+							OnMailServerPolled();
+
 							results.AddRange(unreadMailUids.Select(uid =>
 								Tuple.Create(uid, inbox.GetMessage(uid, cancel.Token))));
+						}
 					}
 				}
 			}

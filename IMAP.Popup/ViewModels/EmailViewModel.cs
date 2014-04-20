@@ -1,9 +1,7 @@
 ﻿using Caliburn.Micro;
 using IMAP.Popup.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace IMAP.Popup.ViewModels
@@ -67,7 +65,7 @@ namespace IMAP.Popup.ViewModels
         {
             get
             {
-                var toEmails = _email.To.Aggregate(String.Empty, (acc, to) => acc += (to + ";"));
+                var toEmails = _email.To.Aggregate(String.Empty, (acc, to) => acc + (to + ";"));
                 return toEmails.EndsWith(";") ? toEmails.Substring(0, toEmails.Length - 1) : toEmails;
             }
         }
@@ -76,7 +74,7 @@ namespace IMAP.Popup.ViewModels
         {
             get
             {
-                var ccEmails = _email.Cc.Aggregate(String.Empty, (acc, cc) => acc += (cc + ";"));
+                var ccEmails = _email.Cc.Aggregate(String.Empty, (acc, cc) => acc + (cc + ";"));
                 return ccEmails.EndsWith(";") ? ccEmails.Substring(0, ccEmails.Length - 1) : ccEmails;
 
             }

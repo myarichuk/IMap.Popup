@@ -1,8 +1,6 @@
 using Caliburn.Micro;
-using Hardcodet.Wpf.TaskbarNotification;
 using IMAP.Popup.Models;
-using System;
-using System.Windows;
+
 namespace IMAP.Popup.ViewModels
 {
 
