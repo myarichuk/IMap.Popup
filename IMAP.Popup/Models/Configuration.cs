@@ -65,8 +65,8 @@ namespace IMAP.Popup.Models
         [Category("Appearance")]
         public List<MailHighlightRule> HighlightRules { get; set; }
 
-        [DisplayName("Remind later delays (ms)")]
-        [Description("Possible intervals for the mail reminder to appear")]
+        [DisplayName("Remind later delays (minutes)")]
+        [Description("Available intervals for the mail reminder to appear (in minutes)")]
         [Category("General Configuration")]
         public List<long> RemindMeTimespans { get; set; }
     }

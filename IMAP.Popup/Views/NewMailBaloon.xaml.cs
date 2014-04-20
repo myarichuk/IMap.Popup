@@ -12,12 +12,19 @@ using System.Windows.Media.Imaging;
 using System.Linq;
 using System.Windows.Threading;
 using Humanizer;
+using System.Windows.Media.Effects;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMAP.Popup.Views
 {
     public partial class NewMailBaloon : UserControl
     {
         private bool _isClosing;
+        private Timer _closeTimer;
+        private ManualResetEventSlim _shouldResetCloseTimerSignal;
+        private readonly long _popupCloseDelay;
+
         private readonly PersistanceModel _persistanceModel;
 
         public event Action<NewMailBaloon> BaloonClosing;
@@ -65,7 +72,10 @@ namespace IMAP.Popup.Views
         public NewMailBaloon(PersistanceModel persistanceModel)
         {
             InitializeComponent();
+            
+            _shouldResetCloseTimerSignal = new ManualResetEventSlim();
             _persistanceModel = persistanceModel;
+            _popupCloseDelay = _persistanceModel.LoadConfiguration().PopupDelay;
             HighlightRectangle.Fill = new SolidColorBrush(Colors.Transparent);
             TaskbarIcon.AddBalloonClosingHandler(this, OnBalloonClosing);
             AddRemindMeTimingsIfNeeded();
@@ -81,10 +91,10 @@ namespace IMAP.Popup.Views
                 {
                     foreach (var remindDelay in configuration.RemindMeTimespans.Where(x => x > 0))
                     {                        
-                        var remindDelayInMilliseconds = remindDelay;
+                        var remindDelayInMinutes = remindDelay;
                         var remindDelayTextBlock = new TextBlock
                         {
-                            Text = "+" + TimeSpan.FromMilliseconds(remindDelayInMilliseconds)
+                            Text = "+" + TimeSpan.FromMinutes(remindDelayInMinutes)
                                                  .Humanize(precision: 3),
                             FontWeight = FontWeights.Bold,
                             Foreground = new SolidColorBrush(Colors.Black),
@@ -92,19 +102,8 @@ namespace IMAP.Popup.Views
                             Cursor = Cursors.Hand,
                         };
 
-                        remindDelayTextBlock.MouseEnter += (sender, args) =>
-                        {
-                            var txtBlock = sender as TextBlock;
-                            txtBlock.FontWeight = FontWeights.ExtraBold;
-                        };
 
-                        remindDelayTextBlock.Tag = remindDelayInMilliseconds;
-
-                        remindDelayTextBlock.MouseLeave += (sender, args) =>
-                        {
-                            var txtBlock = sender as TextBlock;
-                            txtBlock.FontWeight = FontWeights.Bold;
-                        };
+                        remindDelayTextBlock.Tag = remindDelayInMinutes;
 
                         remindDelayTextBlock.Visibility = System.Windows.Visibility.Visible;
                         RemindMePanel.Children.Add(remindDelayTextBlock);
@@ -115,8 +114,10 @@ namespace IMAP.Popup.Views
                         textBlock.MouseDown += (sender, args) =>
                         {
                             var remindMeSelected = RemindMeLaterSelected;
+                            var remindMeIntervalInMinutes = (long)textBlock.Tag;
                             if (remindMeSelected != null)
-                                remindMeSelected((long)textBlock.Tag);
+                                remindMeSelected(remindMeIntervalInMinutes);
+                            SelectedRemindMeIntervalInMinutes = remindMeIntervalInMinutes;
                             var txtBlock = sender as TextBlock;
                             if (((SolidColorBrush)txtBlock.Foreground).Color == Colors.Black)
                             {
@@ -129,6 +130,30 @@ namespace IMAP.Popup.Views
                             else
                                 txtBlock.Foreground = new SolidColorBrush(Colors.Black);
                         };
+
+                        textBlock.MouseEnter += (sender, args) =>
+                        {
+                            var txtBlock = sender as TextBlock;
+                            txtBlock.FontWeight = FontWeights.Heavy;
+                            txtBlock.Effect = new DropShadowEffect
+                            {
+                                Color = Colors.Gray
+                            };
+
+                            foreach (var txt in RemindMePanel.Children.OfType<TextBlock>()
+                                                                      .Where(x => !ReferenceEquals(x, txtBlock)))
+                            {
+                                txt.FontWeight = FontWeights.Bold;
+                                txt.Effect = null;
+                            }
+                        };
+                        textBlock.MouseLeave += (sender, args) =>
+                        {
+                            var txtBlock = sender as TextBlock;
+                            txtBlock.FontWeight = FontWeights.Bold;
+                            txtBlock.Effect = null;
+                        };
+
                     }
 
                     RemindMePanel.Visibility = System.Windows.Visibility.Visible;
@@ -141,6 +166,8 @@ namespace IMAP.Popup.Views
         }
 
         public bool IsFollowupSelected { get; private set; }
+
+        public long? SelectedRemindMeIntervalInMinutes { get; private set; }
 
         public string FollowupIconSource
         {
@@ -173,12 +200,30 @@ namespace IMAP.Popup.Views
             taskbarIcon.CloseBalloon();
         }
 
+        private void grid_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (_closeTimer != null)
+            {
+                _closeTimer.Dispose();
+                _closeTimer = null;
+            }
+
+            _shouldResetCloseTimerSignal.Reset();
+
+            _closeTimer = new Timer(state =>
+            {
+                if (!_shouldResetCloseTimerSignal.IsSet)
+                    Dispatcher.Invoke(() => Close());
+            }, null, _popupCloseDelay, Timeout.Infinite);
+        }
+
         private void grid_MouseEnter(object sender, MouseEventArgs e)
         {
             if (_isClosing) return;
                         
             //the tray icon assigned this attached property to simplify access
             TaskbarIcon taskbarIcon = TaskbarIcon.GetParentTaskbarIcon(this);
+            _shouldResetCloseTimerSignal.Set();
             taskbarIcon.ResetBalloonCloseTimer();
         }
 
@@ -197,7 +242,7 @@ namespace IMAP.Popup.Views
 
         private void FollowupMouseClick(object sender, MouseButtonEventArgs e)
         {
-            IsFollowupSelected = !IsFollowupSelected;
+            IsFollowupSelected = !IsFollowupSelected;            
             FollowupIcon.Source = new BitmapImage(new Uri("pack://application:,,,/IMAP.Popup;component" + FollowupIconSource));            
         }
 
